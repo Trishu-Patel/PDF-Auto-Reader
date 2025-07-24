@@ -201,3 +201,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+pdf/
+
+temp/
+
+poppler-24.08.0/
