@@ -22,8 +22,8 @@ class PdfAutoReaderApp(QMainWindow):
         left_widget = PdfDisplayWidget()
         right_widget = TextPlayerWidget()
         
-        main_layout.addWidget(left_widget, 7) 
-        main_layout.addWidget(right_widget, 13) 
+        main_layout.addWidget(left_widget, 3) 
+        main_layout.addWidget(right_widget, 5) 
         
         self.showMaximized()
 

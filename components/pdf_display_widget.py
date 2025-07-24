@@ -7,8 +7,10 @@ from PyQt5.QtWidgets import (
     QSpinBox,
     QHBoxLayout,
     QSizePolicy,
+    QGraphicsView,
+    QGraphicsScene,
 )
-from PyQt5.QtGui import QPixmap, QImage
+from PyQt5.QtGui import QPixmap, QImage, QPainter, QTransform
 from helpers.pdf import get_number_of_pages, pdf_to_image
 from PyQt5.QtCore import Qt, QSize
 from PIL.Image import Image
@@ -31,8 +33,16 @@ class PdfDisplayWidget(QWidget):
         toolbar = self.construct_toolbar()
         layout.addLayout(toolbar)
 
-        self.image_label = QLabel()
-        layout.addWidget(self.image_label)
+        self.graphics_view = QGraphicsView()
+        self.graphics_scene = QGraphicsScene()
+        self.graphics_view.setScene(self.graphics_scene)
+        self.graphics_view.setRenderHint(QPainter.Antialiasing)
+        self.graphics_view.setOptimizationFlag(QGraphicsView.DontSavePainterState)
+        self.graphics_view.setViewportUpdateMode(
+            QGraphicsView.BoundingRectViewportUpdate
+        )
+
+        layout.addWidget(self.graphics_view)
 
         self.set_image_label("Please open a PDF file to display its pages.")
 
@@ -41,13 +51,21 @@ class PdfDisplayWidget(QWidget):
 
         self.file_button = QPushButton("Open PDF")
         self.file_button.clicked.connect(self.upload_pdf)
-        toolbar.addWidget(self.file_button, 2)
+        toolbar.addWidget(self.file_button, 4)
+
+        self.zoom_in_button = QPushButton("+")
+        self.zoom_in_button.clicked.connect(self.zoom_in)
+        toolbar.addWidget(self.zoom_in_button, 1)
+
+        self.zoom_out_button = QPushButton("-")
+        self.zoom_out_button.clicked.connect(self.zoom_out)
+        toolbar.addWidget(self.zoom_out_button, 1)
 
         self.page_selector = QSpinBox()
         self.page_selector.setValue(0)
         self.page_selector.setDisabled(True)
         self.page_selector.valueChanged.connect(self.display_page)
-        toolbar.addWidget(self.page_selector, 1)
+        toolbar.addWidget(self.page_selector, 2)
 
         self.number_of_pages_label = QLabel("of 0 pages")
         self.page_selector.valueChanged.connect(
@@ -58,7 +76,7 @@ class PdfDisplayWidget(QWidget):
         self.number_of_pages_label.setSizePolicy(
             QSizePolicy.Maximum, QSizePolicy.Maximum
         )
-        toolbar.addWidget(self.number_of_pages_label, 1)
+        toolbar.addWidget(self.number_of_pages_label, 2)
 
         return toolbar
 
@@ -109,25 +127,21 @@ class PdfDisplayWidget(QWidget):
                 image.tobytes(), image.width, image.height, QImage.Format_RGB888
             )
 
-            pixmap = QPixmap.fromImage(qimage).scaled(
-                QSize(self.image_label.width(), self.image_label.height()),
-                Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation,
-            )
-
+            pixmap = QPixmap.fromImage(qimage)
             self.set_image_label(pixmap)
         except:
             self.set_image_label("Error displaying page")
 
     def set_image_label(self, image_label):
-        self.image_label.clear()
+        self.graphics_scene.clear()
 
         if isinstance(image_label, QPixmap):
-            pixmap = image_label
-            message = ""
+            self.graphics_scene.addPixmap(image_label)
         else:
-            pixmap = QPixmap()
-            message = image_label
+            self.graphics_scene.addText(str(image_label))
 
-        self.image_label.setPixmap(pixmap)
-        self.image_label.setText(message)
+    def zoom_in(self):
+        self.graphics_view.scale(1.15, 1.15)
+
+    def zoom_out(self):
+        self.graphics_view.scale(1 / 1.15, 1 / 1.15)
