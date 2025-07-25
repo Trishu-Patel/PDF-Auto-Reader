@@ -8,6 +8,7 @@ from collections.abc import Callable
 
 from utils.constants import ZOOM_STEP
 
+
 class PdfSnippetTool(QGraphicsView):
     def __init__(self, scene):
         super().__init__(scene)
@@ -19,7 +20,7 @@ class PdfSnippetTool(QGraphicsView):
         self.drag_end_pos = None
         self.dash_rect_item = None
 
-        self.process_image: Callable[[int, int, int, int], None] | None = None
+        self.process_image_callback: Callable[[int, int, int, int], None] | None = None
 
     def mousePressEvent(self, event: QMouseEvent | None):
         if event is None:
@@ -38,11 +39,11 @@ class PdfSnippetTool(QGraphicsView):
         if event.button() == Qt.MouseButton.RightButton:
 
             if (
-                self.process_image is not None
+                self.process_image_callback is not None
                 and self.drag_start_pos is not None
                 and self.drag_end_pos is not None
             ):
-                self.process_image(
+                self.process_image_callback(
                     round(self.drag_start_pos.x()),
                     round(self.drag_start_pos.y()),
                     round(self.drag_end_pos.x()),
@@ -99,5 +100,7 @@ class PdfSnippetTool(QGraphicsView):
     def zoom_out(self):
         self.scale(1 / ZOOM_STEP, 1 / ZOOM_STEP)
 
-    def set_process_image(self, func: Callable[[int, int, int, int], None]):
-        self.process_image = func
+    def set_process_snippet_callback(
+        self, callback: Callable[[int, int, int, int], None]
+    ):
+        self.process_image_callback = callback

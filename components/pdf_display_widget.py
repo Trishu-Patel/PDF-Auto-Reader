@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QPixmap, QImage
 from components.pdf_snippet_tool import PdfSnippetTool
+from helpers.image_processing import process_image
 from helpers.pdf import get_number_of_pages, pdf_to_image
 from PIL.Image import Image
 
@@ -34,7 +35,6 @@ class PdfDisplayWidget(QWidget):
 
         self.graphics_scene = QGraphicsScene()
         self.graphics_view = PdfSnippetTool(self.graphics_scene)
-        self.graphics_view.set_process_image(self.get_image_snippet)
 
         layout.addWidget(self.graphics_view)
 
@@ -143,9 +143,13 @@ class PdfDisplayWidget(QWidget):
     def get_current_page(self) -> Image | None:
         return self.get_image(self.page_selector.value())
 
-    def get_image_snippet(self, x1: int, y1: int, x2: int, y2: int):
-        image = self.get_current_page()
-        if image is None:
-            return
+    def set_process_snippet_callback(self, callback):
 
-        image.crop((x1, y1, x2, y2)).show()
+        def new_callback(x1: int, y1: int, x2: int, y2: int):
+            image = self.get_current_page()
+            if image is None:
+                return
+            image = process_image(image, x1, y1, x2, y2)
+            callback(image)
+
+        self.graphics_view.set_process_snippet_callback(new_callback)

@@ -11,7 +11,12 @@ class TextPlayerWidget(QWidget):
         self.setStyleSheet("background-color: lightGreen;")
 
         left_layout = QVBoxLayout(self)
-        left_label = QLabel("Text Player")
-        left_label.setAlignment(Qt.AlignCenter)
-        left_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        left_layout.addWidget(left_label)
+        self.label = QLabel("Text Player")
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        left_layout.addWidget(self.label)
+
+    def set_text(self, text: str):
+        self.label.setText(text)
+        self.label.adjustSize()
+        self.label.setWordWrap(True)

@@ -3,6 +3,9 @@ from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QHBoxLayout
 
 from components.pdf_display_widget import PdfDisplayWidget
 from components.text_player_widget import TextPlayerWidget
+from helpers.ocr import optical_character_recognition
+from PIL.Image import Image
+
 
 class PdfAutoReaderApp(QMainWindow):
     def __init__(self):
@@ -15,17 +18,24 @@ class PdfAutoReaderApp(QMainWindow):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
 
-        main_layout = QHBoxLayout(central_widget)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
+        self.main_layout = QHBoxLayout(central_widget)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(0)
 
-        left_widget = PdfDisplayWidget()
-        right_widget = TextPlayerWidget()
-        
-        main_layout.addWidget(left_widget, 4) 
-        main_layout.addWidget(right_widget, 5) 
-        
+        self.pdf_display_widget = PdfDisplayWidget()
+        self.text_player_widget = TextPlayerWidget()
+
+        self.pdf_display_widget.set_process_snippet_callback(self.process_snippet)
+
+        self.main_layout.addWidget(self.pdf_display_widget, 4)
+        self.main_layout.addWidget(self.text_player_widget, 5)
+
         self.showMaximized()
+
+    def process_snippet(self, image: Image):
+        text = optical_character_recognition(image)
+
+        self.text_player_widget.set_text(text)
 
 
 if __name__ == "__main__":
