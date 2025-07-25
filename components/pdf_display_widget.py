@@ -7,12 +7,11 @@ from PyQt5.QtWidgets import (
     QSpinBox,
     QHBoxLayout,
     QSizePolicy,
-    QGraphicsView,
     QGraphicsScene,
 )
-from PyQt5.QtGui import QPixmap, QImage, QPainter, QTransform
+from PyQt5.QtGui import QPixmap, QImage
+from components.pdf_snippet_tool import PdfSnippetTool
 from helpers.pdf import get_number_of_pages, pdf_to_image
-from PyQt5.QtCore import Qt, QSize
 from PIL.Image import Image
 
 
@@ -33,14 +32,9 @@ class PdfDisplayWidget(QWidget):
         toolbar = self.construct_toolbar()
         layout.addLayout(toolbar)
 
-        self.graphics_view = QGraphicsView()
         self.graphics_scene = QGraphicsScene()
-        self.graphics_view.setScene(self.graphics_scene)
-        self.graphics_view.setRenderHint(QPainter.Antialiasing)
-        self.graphics_view.setOptimizationFlag(QGraphicsView.DontSavePainterState)
-        self.graphics_view.setViewportUpdateMode(
-            QGraphicsView.BoundingRectViewportUpdate
-        )
+        self.graphics_view = PdfSnippetTool(self.graphics_scene)
+        self.graphics_view.set_process_image(self.get_image_snippet)
 
         layout.addWidget(self.graphics_view)
 
@@ -53,13 +47,13 @@ class PdfDisplayWidget(QWidget):
         self.file_button.clicked.connect(self.upload_pdf)
         toolbar.addWidget(self.file_button, 4)
 
-        self.zoom_in_button = QPushButton("+")
-        self.zoom_in_button.clicked.connect(self.zoom_in)
-        toolbar.addWidget(self.zoom_in_button, 1)
-
         self.zoom_out_button = QPushButton("-")
         self.zoom_out_button.clicked.connect(self.zoom_out)
         toolbar.addWidget(self.zoom_out_button, 1)
+
+        self.zoom_in_button = QPushButton("+")
+        self.zoom_in_button.clicked.connect(self.zoom_in)
+        toolbar.addWidget(self.zoom_in_button, 1)
 
         self.page_selector = QSpinBox()
         self.page_selector.setValue(0)
@@ -141,7 +135,17 @@ class PdfDisplayWidget(QWidget):
             self.graphics_scene.addText(str(image_label))
 
     def zoom_in(self):
-        self.graphics_view.scale(1.15, 1.15)
+        self.graphics_view.zoom_in()
 
     def zoom_out(self):
-        self.graphics_view.scale(1 / 1.15, 1 / 1.15)
+        self.graphics_view.zoom_out()
+
+    def get_current_page(self) -> Image | None:
+        return self.get_image(self.page_selector.value())
+
+    def get_image_snippet(self, x1: int, y1: int, x2: int, y2: int):
+        image = self.get_current_page()
+        if image is None:
+            return
+
+        image.crop((x1, y1, x2, y2)).show()
